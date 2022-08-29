@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Users {
+  id           Int            @id @default(autoincrement())
+  login        String         @unique
+  password     String
+  Permissions  Permissions[]
+  TicketsLists TicketsLists[]
+}
+
+model Permissions {
+  id             Int          @id @default(autoincrement())
+  user           Users        @relation(fields: [user_id], references: [id])
+  user_id        Int
+  ticket_list    TicketsLists @relation(fields: [ticket_list_id], references: [id], onDelete: Cascade)
+  ticket_list_id Int
+  permissions    Permission[]
+
+  @@unique([user_id, ticket_list_id], map: "Permissions_user_id_ticket_list_id_key")
+}
+
+model TicketsLists {
+  id          Int           @id @default(autoincrement())
+  name        String
+  owner       Users         @relation(fields: [owner_id], references: [id])
+  owner_id    Int
+  Permissions Permissions[]
+  Tickets     Tickets[]
+
+  @@unique([name, owner_id], map: "TicketsLists_name_owner_id_key")
+}
+
+model Tickets {
+  id             Int          @id @default(autoincrement())
+  name           String
+  ticket_list    TicketsLists @relation(fields: [ticket_list_id], references: [id], onDelete: Cascade)
+  ticket_list_id Int
+
+  @@unique([name, ticket_list_id], map: "Tickets_name_ticket_list_id_key")
+}
+
+enum Permission {
+  CREATE
+  UPDATE
+  DELETE
+  READ
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
